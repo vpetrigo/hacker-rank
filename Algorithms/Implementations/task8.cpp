@@ -50,7 +50,8 @@ int main() {
     
     auto choco = money / cost;
     auto wrappers = choco;
-
+    // while it is possible to collect enough wrappers to exchange
+    // for chocolates
     while (wrappers >= ch_for_discount) {
       auto discount_choco = wrappers / ch_for_discount;
       
