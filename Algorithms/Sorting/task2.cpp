@@ -11,7 +11,7 @@
  * insertion sort.
  * Guideline: You can copy the value of ee to a variable and consider its cell
  * "empty". Since this leaves an extra cell empty on the right, you can shift
- * everything over until V can be inserted. This will create a duplicate of 
+ * everything over until V can be inserted. This will create a duplicate of
  * each value, but when you reach the right spot, you can replace it with ee.
  *
  * Input Format
@@ -51,18 +51,15 @@ void print_arr(const vector<int>& arr) {
 void last_sort(vector<int>& arr) {
   int to_sort = arr.back();
   auto arr_len = arr.size();
+  size_t i = arr_len - 1;
 
-  for (size_t i = arr_len - 1; i < arr_len; --i) {
-    if (to_sort < arr[i - 1]) {
-      arr[i] = arr[i - 1];
-    }
-    else {
-      arr[i] = to_sort;
-      break;
-    }
+  while (i < arr_len && to_sort < arr[i - 1]) {
+    arr[i] = arr[i - 1];
     print_arr(arr);
+    --i;
   }
 
+  arr[i] = to_sort;
   print_arr(arr);
 }
 
