@@ -82,7 +82,7 @@ class BigNum {
         bn.repr_.crbegin(), bn.repr_.crend(), res.rbegin(), res.rbegin(),
         [](const unsigned& n1, const unsigned& n2) { return n1 + n2; });
     normalize_repr(res);
-    std::swap(repr_, res);
+    repr_ = std::move(res);
 
     return *this;
   }
@@ -103,7 +103,7 @@ class BigNum {
       }
     }
     normalize_repr(res);
-    std::swap(repr_, res);
+    repr_ = std::move(res);
 
     return *this;
   }
@@ -136,14 +136,34 @@ std::ostream& operator<<(std::ostream& os, const BigNum& bn) {
   return os;
 }
 
+BigNum calc_big_modified_fib(BigNum a, BigNum b, int n) {
+  BigNum f0(a);
+  BigNum f1(b);
+
+  for (std::size_t i = 2; i < n; ++i) {
+    BigNum next_f = f1 * f1 + f0;
+
+    f0 = f1;
+    f1 = next_f;
+    std::cout << "next_f: " << next_f << std::endl;
+    std::cout << "f0: " << f1 << std::endl;
+    std::cout << "f1: " << f0 << std::endl;
+  }
+
+  return f1;
+}
+
 int main() {
   int a, b, n;
-  std::vector<unsigned> test{1, 14};
   std::cin >> a >> b >> n;
-  BigNum bn1(a);
-  BigNum bn2(b);
-
-  std::cout << bn2 * bn1 << std::endl;
+  BigNum ta(b);
+  BigNum tc(a);
+  BigNum tb = ta * ta + tc;
+  std::cout << ta << std::endl;
+  std::cout << tb << std::endl;
+  std::cout << ta << std::endl;
+  auto res = calc_big_modified_fib(a, b, n);
+  std::cout << res << std::endl;
 
   return 0;
 }
