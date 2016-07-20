@@ -93,6 +93,27 @@ class BigNum {
     return a;
   }
 
+  BigNum& operator*=(const BigNum& bn) {
+    std::size_t max_len = std::max(bn.digits(), digits());
+    std::vector<unsigned> res(2 * max_len);
+
+    for (std::size_t i = 0; i < digits(); ++i) {
+      for (std::size_t j = 0; j < bn.digits(); ++j) {
+        res[max_len - (i + j)] += repr_[i] * bn.repr_[j];
+      }
+    }
+    normalize_repr(res);
+    std::swap(repr_, res);
+
+    return *this;
+  }
+
+  friend BigNum operator*(BigNum a, const BigNum& b) {
+    a *= b;
+
+    return a;
+  }
+
   friend std::ostream& operator<<(std::ostream& os, const BigNum& bn);
 
  private:
@@ -121,9 +142,8 @@ int main() {
   std::cin >> a >> b >> n;
   BigNum bn1(a);
   BigNum bn2(b);
-  BigNum bn3 = bn1 + bn2;
 
-  std::cout << bn3 << std::endl;
+  std::cout << bn2 * bn1 << std::endl;
 
   return 0;
 }
