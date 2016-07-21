@@ -1,1 +1,6 @@
+# ignore vim temporary files
 *.swp
+# ignore VS Code folder
+.vscode/
+# ignore object files
+*.o
