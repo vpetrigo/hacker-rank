@@ -19,7 +19,7 @@ void print_cont(const std::string& s, ForwardIt begin, ForwardIt end);
 // Numeric helper functions
 template <typename T>
 std::size_t get_int_len(T num);
-// remove leading zeros in an internal Big Integer container 
+// remove leading zeros in an internal Big Integer container
 template <typename Cont>
 void remove_leading_zeros(Cont& c);
 
@@ -127,41 +127,15 @@ std::ostream& operator<<(std::ostream& os, const BigNum& bn) {
   return os;
 }
 
-BigNum calc_big_modified_fib(BigNum&& a, BigNum&& b, int n) {
-  BigNum f0(std::move(a));
-  BigNum f1(std::move(b));
-  BigNum next_f = 0;
-
-  for (std::size_t i = 2; i < n; ++i) {
-    next_f = f1 * f1 + f0;
-    f0 = f1;
-    f1 = next_f;
-  }
-
-  return f1;
-}
-
-int test() {
-  BigNum a(std::string("999"));
-  BigNum b(std::string("999"));
-  BigNum c(std::string("5"));
-
-  for (std::size_t i = 0; i < 1; ++i) {
-    c *= b;
-    std::cout << "C: " << c << std::endl;
-  }
-  
-  return 0;
-}
+// calculate the n-th modified Fibonacci number
+BigNum calc_big_modified_fib(BigNum&& a, BigNum&& b, int n);
 
 int main() {
-  // test();
   int a, b, n;
   std::cin >> a >> b >> n;
-  
+  // calculate modified Fib numbers: F(i + 2) = F(i + 1)^2 + F(i)
   auto res = calc_big_modified_fib(a, b, n);
-  
-  // std::cout << res << std::endl;
+  std::cout << res << std::endl;
 
   return 0;
 }
@@ -170,15 +144,14 @@ template <typename... Ts>
 void print_val(const std::string& s, const Ts&... v) {
   std::cout << s;
   using extender = int[];
-  (void) extender{(std::cout << v << std::endl, 0)...};
+  (void)extender{(std::cout << v << std::endl, 0)...};
 }
 
 template <typename ForwardIt>
 void print_cont(const std::string& s, ForwardIt begin, ForwardIt end) {
   using T = typename ForwardIt::value_type;
   std::cout << s;
-  std::for_each(begin, end,
-                [](const T& n) { std::cout << n; });
+  std::for_each(begin, end, [](const T& n) { std::cout << n; });
   std::cout << std::endl;
 }
 
@@ -205,6 +178,12 @@ void remove_leading_zeros(Cont& c) {
 template <typename CForwardIt, typename ForwardIt>
 void naive_mul(CForwardIt a_rbegin, CForwardIt a_rend, CForwardIt b_rbegin,
                CForwardIt b_rend, ForwardIt res_rbegin) {
+  // mul_offset determine an offset on each step of multiplication
+  // Example:         11
+  //                  12
+  //                  --
+  //               + -22 <- mul_offset = 0
+  //                 11- <- mul_offset = 1
   std::size_t mul_offset = 0;
 
   for (auto ait = a_rbegin; ait != a_rend; ++ait) {
@@ -224,12 +203,13 @@ Cont karatsuba_mul(const Cont& a, const Cont& b) {
   auto max_len = std::max(a_len, b_len);
   std::size_t i = 0;
   // make length the degree of 2
-  max_len = static_cast<std::size_t> (std::pow(2, std::ceil(std::log2(max_len) + 1)));
+  max_len =
+      static_cast<std::size_t>(std::pow(2, std::ceil(std::log2(max_len) + 1)));
 
   Cont ext_a(max_len);
   Cont ext_b(max_len);
   Cont res(2 * max_len);
-  
+
   std::copy(a.crbegin(), a.crend(), ext_a.rbegin());
   std::copy(b.crbegin(), b.crend(), ext_b.rbegin());
   _karatsuba_mul(ext_a.crbegin(), ext_a.crend(), ext_b.crbegin(), ext_b.crend(),
@@ -269,21 +249,26 @@ void _karatsuba_mul(CForwardIt a_rbegin, CForwardIt a_rend, CForwardIt b_rbegin,
   PartCont partsum_res(num_len);
   // add Xl to @partsum_a
   std::transform(a_mid, a_rend, a_rbegin, partsum_a.rbegin(),
-      [](const T& n1, const T& n2) { return n1 + n2; });
+                 [](const T& n1, const T& n2) { return n1 + n2; });
   // add Yl to @partsum_b
   std::transform(b_mid, b_rend, b_rbegin, partsum_b.rbegin(),
-      [](const T& n1, const T& n2) { return n1 + n2; });
+                 [](const T& n1, const T& n2) { return n1 + n2; });
   // P3 = (Xr + Xl) * (Yr + Yl)
   _karatsuba_mul(partsum_a.crbegin(), partsum_a.crend(), partsum_b.crbegin(),
                  partsum_b.crend(), partsum_res.rbegin());
-  // std::cout << "After P3" << std::endl;
-  std::transform(partsum_res.rbegin(), partsum_res.rend(), res_rbegin, partsum_res.rbegin(),
-      [](const T& n1, const T& n2) { return n1 - n2; });
-  std::transform(partsum_res.rbegin(), partsum_res.rend(), res_mid, partsum_res.rbegin(),
-      [](const T& n1, const T& n2) { return n1 - n2; });
+  // After all we have to calculate P3 - P1 - P2
+  // P3 - P1
+  std::transform(partsum_res.rbegin(), partsum_res.rend(), res_rbegin,
+                 partsum_res.rbegin(),
+                 [](const T& n1, const T& n2) { return n1 - n2; });
+  // P3 - P2
+  std::transform(partsum_res.rbegin(), partsum_res.rend(), res_mid,
+                 partsum_res.rbegin(),
+                 [](const T& n1, const T& n2) { return n1 - n2; });
   // insert P3 into the middle of the result
-  std::transform(partsum_res.crbegin(), partsum_res.crend(), res_rbegin + num_len / 2, res_rbegin + num_len / 2,
-      [](const T& n1, const T& n2) { return n1 + n2; });
+  std::transform(partsum_res.crbegin(), partsum_res.crend(),
+                 res_rbegin + num_len / 2, res_rbegin + num_len / 2,
+                 [](const T& n1, const T& n2) { return n1 + n2; });
 }
 
 template <typename ForwardIt>
@@ -291,12 +276,11 @@ void normalize_repr(ForwardIt repr_begin, ForwardIt repr_end) {
   using T = typename ForwardIt::value_type;
   T rem = 0;
 
-  std::for_each(repr_begin, repr_end,
-                [&rem](T& n) {
-                  n += rem;
-                  rem = n / num_base;
-                  n %= num_base;
-                });
+  std::for_each(repr_begin, repr_end, [&rem](T& n) {
+    n += rem;
+    rem = n / num_base;
+    n %= num_base;
+  });
 }
 
 // integer overloading
@@ -317,8 +301,10 @@ void convert_to_big_num(const T& num, Cont* dest, std::true_type) {
 // string overloading
 template <typename T, typename Cont>
 void convert_to_big_num(const T& num, Cont* dest, std::false_type) {
-  const auto num_len = std::distance(std::find_if_not(num.cbegin(), num.cend(), 
-                                     [](char ch) { return ch == '0'; }), num.cend());
+  const auto num_len =
+      std::distance(std::find_if_not(num.cbegin(), num.cend(),
+                                     [](char ch) { return ch == '0'; }),
+                    num.cend());
 
   if (num_len == 0) {
     dest->resize(1);
@@ -330,4 +316,18 @@ void convert_to_big_num(const T& num, Cont* dest, std::false_type) {
     std::transform(num.crbegin(), num.crend(), dest->rbegin(),
                    [](const char ch) { return ch - '0'; });
   }
+}
+
+BigNum calc_big_modified_fib(BigNum&& a, BigNum&& b, int n) {
+  BigNum f0(std::move(a));
+  BigNum f1(std::move(b));
+  BigNum next_f = 0;
+
+  for (std::size_t i = 2; i < n; ++i) {
+    next_f = f1 * f1 + f0;
+    f0 = f1;
+    f1 = next_f;
+  }
+
+  return f1;
 }
