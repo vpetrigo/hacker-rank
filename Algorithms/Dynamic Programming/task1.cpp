@@ -120,7 +120,8 @@ std::ostream& operator<<(std::ostream& os, const BigNum& bn) {
          return n == 0;
        })) != cit_end) {
     std::for_each(cit, cit_end, [&os](const unsigned& n) { os << n; });
-  } else {
+  }
+  else {
     os << 0;
   }
 
@@ -309,7 +310,8 @@ void convert_to_big_num(const T& num, Cont* dest, std::false_type) {
   if (num_len == 0) {
     dest->resize(1);
     dest->emplace_back(0);
-  } else {
+  } 
+  else {
     // don't know how to handle negative input
     assert(num[0] != '-');
     dest->resize(num_len);
