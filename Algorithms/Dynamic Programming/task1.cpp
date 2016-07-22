@@ -72,13 +72,13 @@ class BigNum {
         bn.repr_.crbegin(), bn.repr_.crend(), res.rbegin(), res.rbegin(),
         [](const value_type& n1, const value_type& n2) { return n1 + n2; });
     normalize_repr(res.rbegin(), res.rend());
+    remove_leading_zeros(res);
     std::swap(repr_, res);
   }
 
   void mul(const BigNum& bn) {
     auto res = karatsuba_mul(repr_, bn.repr_);
 
-    normalize_repr(res.rbegin(), res.rend());
     std::swap(repr_, res);
   }
 
@@ -142,20 +142,26 @@ BigNum calc_big_modified_fib(BigNum&& a, BigNum&& b, int n) {
 }
 
 int test() {
-  BigNum a(std::string("777"));
-  BigNum b(std::string("777"));
-  BigNum c(std::string("000000001"));
-  std::vector<int> v{0, 0, 0, 0, 0, 0, 0, 0, 1};
+  BigNum a(std::string("999"));
+  BigNum b(std::string("999"));
+  BigNum c(std::string("5"));
 
-  remove_leading_zeros(v);
-  // print_cont("v: ", std::cbegin(v), std::cend(v));
+  for (std::size_t i = 0; i < 1; ++i) {
+    c *= b;
+    std::cout << "C: " << c << std::endl;
+  }
+  
   return 0;
 }
 
 int main() {
+  // test();
   int a, b, n;
   std::cin >> a >> b >> n;
-  std::cout << calc_big_modified_fib(a, b, n) << std::endl;
+  
+  auto res = calc_big_modified_fib(a, b, n);
+  
+  // std::cout << res << std::endl;
 
   return 0;
 }
@@ -217,27 +223,19 @@ Cont karatsuba_mul(const Cont& a, const Cont& b) {
   auto b_len = b.size();
   auto max_len = std::max(a_len, b_len);
   std::size_t i = 0;
-
-  while (max_len > static_cast<std::size_t>(pow(2, i))) {
-    ++i;
-  }
-  max_len = static_cast<std::size_t>(pow(2, i));
+  // make length the degree of 2
+  max_len = static_cast<std::size_t> (std::pow(2, std::ceil(std::log2(max_len) + 1)));
 
   Cont ext_a(max_len);
   Cont ext_b(max_len);
   Cont res(2 * max_len);
+  
   std::copy(a.crbegin(), a.crend(), ext_a.rbegin());
   std::copy(b.crbegin(), b.crend(), ext_b.rbegin());
-  // print_cont("a: ", a.cbegin(), a.cend());
-  // print_cont("b: ", b.cbegin(), b.cend());
   _karatsuba_mul(ext_a.crbegin(), ext_a.crend(), ext_b.crbegin(), ext_b.crend(),
                  res.rbegin());
-  // std::cout << "Before removing lead zeros" << std::endl;
-  // print_cont("res: ", res.cbegin(), res.cend());
   normalize_repr(res.rbegin(), res.rend());
   remove_leading_zeros(res);
-  // std::cout << "Before removing lead zeros" << std::endl;
-  // print_cont("res: ", res.cbegin(), res.cend());
 
   return res;
 }
@@ -245,14 +243,13 @@ Cont karatsuba_mul(const Cont& a, const Cont& b) {
 template <typename CForwardIt, typename ForwardIt>
 void _karatsuba_mul(CForwardIt a_rbegin, CForwardIt a_rend, CForwardIt b_rbegin,
                     CForwardIt b_rend, ForwardIt res_rbegin) {
-  constexpr auto LEN_FOR_NAIVE_MUL = 16;
+  constexpr auto LEN_FOR_NAIVE_MUL = 32;
   auto num_len = std::distance(a_rbegin, a_rend);
   auto res_mid = res_rbegin + num_len;
   auto res_end = res_mid + num_len;
 
   if (num_len <= LEN_FOR_NAIVE_MUL) {
     naive_mul(a_rbegin, a_rend, b_rbegin, b_rend, res_rbegin);
-    normalize_repr(res_rbegin, res_end);
     return;
   }
   // handy aliases
@@ -260,44 +257,33 @@ void _karatsuba_mul(CForwardIt a_rbegin, CForwardIt a_rend, CForwardIt b_rbegin,
   auto b_mid = b_rbegin + num_len / 2;
   using T = typename ForwardIt::value_type;
   using PartCont = std::vector<typename ForwardIt::value_type>;
-  // print_cont("ab - am: ", a_rbegin, a_mid);
-  // print_cont("bb - bm: ", b_rbegin, b_mid);
-  // print_cont("am - ae: ", a_mid, a_rend);
-  // print_cont("bm - be: ", b_mid, b_rend);
   // P2 = Xr * Yr
   _karatsuba_mul(a_rbegin, a_mid, b_rbegin, b_mid, res_rbegin);
-  // print_cont("res: ", res_rbegin, res_rbegin + 2 * num_len);
   // P1 = Xl * Yl
   _karatsuba_mul(a_mid, a_rend, b_mid, b_rend, res_rbegin + num_len);
-  // print_cont("res: ", res_rbegin, res_rbegin + 2 * num_len);
   // storage for Xr + Xl; store Xr
-  normalize_repr(res_rbegin, res_end);
-  PartCont partsum_a(a_rbegin, a_mid);
+  PartCont partsum_a(num_len / 2);
   // storage for Yr + Yl; store Xr
-  PartCont partsum_b(b_rbegin, b_mid);
+  PartCont partsum_b(num_len / 2);
   // storage for P3 = (Xr + Xl) * (Yr + Yl)
   PartCont partsum_res(num_len);
   // add Xl to @partsum_a
-  std::transform(a_mid, a_rend, partsum_a.rbegin(), partsum_a.rbegin(),
+  std::transform(a_mid, a_rend, a_rbegin, partsum_a.rbegin(),
       [](const T& n1, const T& n2) { return n1 + n2; });
   // add Yl to @partsum_b
-  std::transform(b_mid, b_rend, partsum_b.rbegin(), partsum_b.rbegin(),
+  std::transform(b_mid, b_rend, b_rbegin, partsum_b.rbegin(),
       [](const T& n1, const T& n2) { return n1 + n2; });
   // P3 = (Xr + Xl) * (Yr + Yl)
   _karatsuba_mul(partsum_a.crbegin(), partsum_a.crend(), partsum_b.crbegin(),
                  partsum_b.crend(), partsum_res.rbegin());
-  // print_cont("partsum_res: ", partsum_res.cbegin(), partsum_res.cend());
   // std::cout << "After P3" << std::endl;
   std::transform(partsum_res.rbegin(), partsum_res.rend(), res_rbegin, partsum_res.rbegin(),
       [](const T& n1, const T& n2) { return n1 - n2; });
-  // print_cont("partsum_res: ", partsum_res.cbegin(), partsum_res.cend());
   std::transform(partsum_res.rbegin(), partsum_res.rend(), res_mid, partsum_res.rbegin(),
       [](const T& n1, const T& n2) { return n1 - n2; });
-  // print_cont("partsum_res: ", partsum_res.cbegin(), partsum_res.cend());
+  // insert P3 into the middle of the result
   std::transform(partsum_res.crbegin(), partsum_res.crend(), res_rbegin + num_len / 2, res_rbegin + num_len / 2,
       [](const T& n1, const T& n2) { return n1 + n2; });
-  // print_cont("res: ", res_rbegin, res_end);
-  normalize_repr(res_rbegin, res_end);
 }
 
 template <typename ForwardIt>
@@ -331,7 +317,8 @@ void convert_to_big_num(const T& num, Cont* dest, std::true_type) {
 // string overloading
 template <typename T, typename Cont>
 void convert_to_big_num(const T& num, Cont* dest, std::false_type) {
-  const auto num_len = num.size();
+  const auto num_len = std::distance(std::find_if_not(num.cbegin(), num.cend(), 
+                                     [](char ch) { return ch == '0'; }), num.cend());
 
   if (num_len == 0) {
     dest->resize(1);
