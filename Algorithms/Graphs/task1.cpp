@@ -59,7 +59,7 @@ vector<int> bfs(const vector<vector<unsigned>>& vertices, const size_t s) {
   deque<unsigned> queue;
 
   distance[s] = 0;
-  queue.push_back(s);
+  queue.emplace_back(s);
 
   while (!queue.empty()) {
     auto v = queue.front();
