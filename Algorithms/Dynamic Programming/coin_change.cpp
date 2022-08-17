@@ -13,8 +13,8 @@
 #include <unordered_map>
 #include <vector>
 
-static unsigned long
-impl_exchange_top_down(std::vector<unsigned>::const_iterator start,
+static unsigned long long
+impl_exchange_top_down(const std::vector<unsigned>::const_iterator &start,
                        const std::vector<unsigned>::const_iterator &end,
                        int value_to_change,
                        std::vector<std::vector<unsigned long long>> &memo)
@@ -34,7 +34,7 @@ impl_exchange_top_down(std::vector<unsigned>::const_iterator start,
         return memo[n][value_to_change];
     }
 
-    if (*start <= value_to_change) {
+    if (coin <= value_to_change) {
         memo[n][value_to_change] =
             impl_exchange_top_down(
                 start, end, value_to_change - static_cast<int>(coin), memo) +
@@ -45,7 +45,27 @@ impl_exchange_top_down(std::vector<unsigned>::const_iterator start,
 
     memo[n][value_to_change] =
         impl_exchange_top_down(start + 1, end, value_to_change, memo);
+
     return memo[n][value_to_change];
+}
+
+static unsigned long long
+impl_exchange_bottom_up(unsigned value_to_change,
+                        const std::vector<unsigned> &exchange_values)
+{
+    std::vector<long long> ways(value_to_change + 1, 0);
+
+    ways[0] = 1;
+
+    for (const auto &coin : exchange_values) {
+        for (size_t value = 0; value < ways.size(); ++value) {
+            if (coin <= value) {
+                ways[value] += ways[value - coin];
+            }
+        }
+    }
+
+    return ways.back();
 }
 
 static unsigned long long
@@ -55,9 +75,10 @@ exchange_number_calc(const std::vector<unsigned> &exchange_values,
     std::vector<std::vector<unsigned long long>> memo(
         exchange_values.size() + 1,
         std::vector<unsigned long long>(value_to_change + 1, 0));
-    return impl_exchange_top_down(std::cbegin(exchange_values),
-                                  std::cend(exchange_values), value_to_change,
-                                  memo);
+    // return impl_exchange_top_down(std::cbegin(exchange_values),
+    //                               std::cend(exchange_values),
+    //                               value_to_change, memo);
+    return impl_exchange_bottom_up(value_to_change, exchange_values);
 }
 
 int main()
