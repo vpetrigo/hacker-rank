@@ -47,66 +47,67 @@
  * 6 6 -1
  * -1 6
  */
-#include <iostream>
-#include <vector>
 #include <deque>
+#include <iostream>
+#include <queue>
+#include <vector>
 
 using namespace std;
 
-vector<int> bfs(const vector<vector<unsigned>>& vertices, const size_t s) {
-  constexpr unsigned edge_weight = 6;
-  vector<int> distance(vertices.size(), -1);
-  deque<unsigned> queue;
+vector<int> bfs(const vector<vector<unsigned>> &vertices, const size_t s) {
+    constexpr unsigned edge_weight = 6;
+    vector<int> distance(vertices.size(), -1);
+    queue<unsigned> queue;
 
-  distance[s] = 0;
-  queue.emplace_back(s);
+    distance[s] = 0;
+    queue.push(s);
 
-  while (!queue.empty()) {
-    auto v = queue.front();
+    while (!queue.empty()) {
+        auto v = queue.front();
 
-    queue.pop_front();
-    for (size_t i = 0; i < vertices[v].size(); ++i) {
-      if (distance[vertices[v][i]] == -1) {
-        distance[vertices[v][i]] = distance[v] + edge_weight;
-        queue.push_back(vertices[v][i]);
-      }
+        queue.pop();
+        for (size_t i = 0; i < vertices[v].size(); ++i) {
+            if (distance[vertices[v][i]] == -1) {
+                distance[vertices[v][i]] = distance[v] + edge_weight;
+                queue.push(vertices[v][i]);
+            }
+        }
     }
-  }
 
-  return distance;
+    return distance;
 }
 
 int main() {
-  size_t t;
+    size_t t;
 
-  cin >> t;
+    cin >> t;
 
-  for (size_t i = 0; i < t; ++i) {
-    size_t n, m;
+    for (size_t i = 0; i < t; ++i) {
+        size_t n, m;
 
-    cin >> n >> m;
-    vector<vector<unsigned>> vertices(n);
+        cin >> n >> m;
+        vector<vector<unsigned>> vertices(n);
 
-    for (size_t j = 0; j < m; ++j) {
-      unsigned v, u;
+        for (size_t j = 0; j < m; ++j) {
+            unsigned v, u;
 
-      cin >> v >> u;
-      vertices[v - 1].emplace_back(u - 1);
-      vertices[u - 1].emplace_back(v - 1);
+            cin >> v >> u;
+            vertices[v - 1].emplace_back(u - 1);
+            vertices[u - 1].emplace_back(v - 1);
+        }
+
+        size_t s;
+
+        cin >> s;
+        auto bfs_result = bfs(vertices, s - 1);
+
+        for (const auto &e : bfs_result) {
+            if (e != 0) {
+                cout << e << ' ';
+            }
+        }
+        cout << endl;
     }
 
-    size_t s;
-
-    cin >> s;
-    auto bfs_result = bfs(vertices, s - 1);
-
-    for (const auto& e : bfs_result) {
-      if (e != 0) {
-        cout << e << ' ';
-      }
-    }
-    cout << endl;
-  }
-
-  return 0;
+    return 0;
 }
