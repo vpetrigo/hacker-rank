@@ -109,13 +109,14 @@ int get_max_profit_top_down_memo(const std::vector<unsigned> &profit,
 int get_max_profit_bottom_up(const std::vector<unsigned> &profit,
                              const std::vector<unsigned> &weight, int capacity)
 {
-    std::vector<std::vector<int>> solution(profit.size(),
+    std::vector<std::vector<int>> solution(2,
                                            std::vector<int>(capacity + 1, 0));
 
     for (size_t avail_capacity = 0; avail_capacity <= capacity;
          ++avail_capacity) {
         if (weight.front() <= avail_capacity) {
-            solution[0][avail_capacity] = static_cast<int>(profit.front());
+            solution[0][avail_capacity] = solution[1][avail_capacity] =
+                static_cast<int>(profit.front());
         }
     }
 
@@ -127,15 +128,15 @@ int get_max_profit_bottom_up(const std::vector<unsigned> &profit,
 
             if (weight[i] <= avail_capacity) {
                 profit1 = static_cast<int>(profit[i]) +
-                          solution[i - 1][avail_capacity - weight[i]];
+                          solution[(i - 1) % 2][avail_capacity - weight[i]];
             }
 
-            profit2 = solution[i - 1][avail_capacity];
-            solution[i][avail_capacity] = std::max(profit1, profit2);
+            profit2 = solution[(i - 1) % 2][avail_capacity];
+            solution[i % 2][avail_capacity] = std::max(profit1, profit2);
         }
     }
 
-    return solution[profit.size() - 1][capacity];
+    return solution[(profit.size() - 1) % 2][capacity];
 }
 
 int get_max_profit(const std::vector<unsigned> &profit,
