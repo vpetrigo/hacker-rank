@@ -1,0 +1,2 @@
+add_executable(pacific_atlantic pacific_atlantic.cpp)
+target_link_libraries(pacific_atlantic PRIVATE doctest)
