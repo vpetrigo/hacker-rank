@@ -1,0 +1,2 @@
+add_executable(max_avg_subarray1 max_avg_subarray1.cpp)
+target_link_libraries(max_avg_subarray1 PRIVATE doctest)
