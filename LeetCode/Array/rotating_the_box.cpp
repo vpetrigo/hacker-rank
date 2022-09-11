@@ -19,34 +19,17 @@ std::vector<std::vector<char>> rotateTheBox(std::vector<std::vector<char>> &box)
     std::vector<std::vector<char>> result(m, std::vector<char>(n));
 
     for (std::size_t i = 0; i < n; ++i) {
-        std::vector<char>::iterator obstacle_it;
-        std::vector<char>::iterator left_it;
-        std::vector<char>::iterator right_it;
-        auto left_boundary = std::begin(box[i]);
-
-        do {
-            obstacle_it = std::find(left_boundary, std::end(box[i]), OBSTACLE);
-            left_it = left_boundary;
-            right_it = obstacle_it - 1;
-
-            while (left_it < right_it) {
-                if (*left_it == STONE && *right_it == EMPTY) {
-                    std::iter_swap(left_it, right_it);
-                    ++left_it;
-                    --right_it;
-                }
-                else if (*left_it == EMPTY) {
-                    ++left_it;
-                }
-                else if (*right_it == STONE) {
-                    --right_it;
-                }
+        std::size_t empty_pos = m - 1;
+        for (std::size_t j = m - 1; j < m; --j) {
+            if (box[i][j] == OBSTACLE) {
+                empty_pos = j - 1;
             }
-
-            if (obstacle_it != std::cend(box[i])) {
-                left_boundary = obstacle_it + 1;
+            else if (box[i][j] == STONE) {
+                box[i][j] = EMPTY;
+                box[i][empty_pos] = STONE;
+                --empty_pos;
             }
-        } while (obstacle_it != std::cend(box[i]));
+        }
     }
 
     for (std::size_t i = 0; i < n; ++i) {
