@@ -1,0 +1,2 @@
+add_executable(rotating_the_box rotating_the_box.cpp)
+target_link_libraries(rotating_the_box PRIVATE doctest)
